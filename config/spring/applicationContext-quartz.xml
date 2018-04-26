@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+	http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd">
+
+        <!-- comm job -->
+        <bean id="commJob" class="com.skycloud.oa.comm.weight.CommJobTimer">
+         	
+        </bean>
+        <bean id="commTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+            <property name="targetObject" ref="commJob"/>
+            <property name="targetMethod">
+                <value>run</value>
+            </property>
+        </bean>
+        <bean id="commTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+            <property name="jobDetail">
+                <ref bean="commTask"/>
+            </property>
+            <property name="cronExpression">
+                <value>0 10 3 * * ?</value>
+            </property>
+        </bean>
+       
+       <bean id="downLoadJob" class="com.skycloud.oa.statistics.quartz.DownLoadExcel"></bean>
+       
+       <bean id="downLoadTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+            <property name="targetObject" ref="downLoadJob"/>
+            <property name="targetMethod">
+                <value>run</value>
+            </property>
+            <property name="concurrent" value="false"/>
+        </bean>
+       <bean id="downLoadTirgger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+            <property name="jobDetail">
+                <ref bean="downLoadTask"/>
+            </property>
+            <property name="cronExpression">
+               <value>0 0 1 * * ?</value>
+            </property>
+        </bean>
+       
+        <bean id="startQuertz" autowire="no" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+            <property name="triggers">
+                <list>
+                	<!-- <ref bean="commTrigger"/> -->
+                	<ref bean="downLoadTirgger"/>
+                </list>
+            </property>
+        </bean>
+        
+</beans>

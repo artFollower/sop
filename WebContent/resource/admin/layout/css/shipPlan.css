@@ -1,0 +1,46 @@
+@charset "utf-8";
+
+.printS{
+	  font-family:宋体;
+	  font-weight:normal;
+}
+tr{
+	padding-bottom: 10px;
+}
+
+
+
+td[type="col-5"]
+{
+width: 25%;
+  font-size: 14px;
+  padding-bottom: 5px;
+  margin-left: 20px;
+}
+
+div[type="form-group"]
+{
+
+   margin-left: 15px;
+   margin-top:1px;
+  font-size: 13px;
+}
+
+
+label[type="col-3"]
+{
+	width: 100%;
+    float: left;
+        min-height: 1px;
+    padding-left: 10px;
+        margin-bottom: 0px;
+}
+
+label[type="col-7"]
+{
+	width: 100%;
+    float: left;
+        min-height: 1px;
+    
+        margin-bottom: 0px;
+}

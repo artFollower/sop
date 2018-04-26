@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+
+	
+	<!-- <bean id="jedisShiroCacheManager" class="com.skycloud.oa.shiro.cache.JedisShiroCacheManager" />
+	
+	<bean id="cacheManager" class="com.skycloud.oa.shiro.cache.CustomShiroCacheManager">
+		<property name="shiroCacheManager" ref="jedisShiroCacheManager" />
+	</bean> -->
+	
+	<bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager" />
+
+	<bean id="sessionValidationScheduler"
+		class="org.apache.shiro.session.mgt.ExecutorServiceSessionValidationScheduler">
+		<property name="interval" value="1800000" />
+	</bean>
+
+	<bean id="sessionManager"
+		class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
+		<property name="sessionDAO" ref="sessionDAO" />
+		<property name="globalSessionTimeout" value="3600000" />
+		<property name="sessionValidationScheduler" ref="sessionValidationScheduler" />
+		<property name="sessionValidationSchedulerEnabled" value="true" />
+	</bean>
+
+	<!-- <bean id="shiroDbRealm" class="com.skycloud.oa.realm.ShiroDbRealm"></bean> 
+		<bean id="casRealm" class="com.skycloud.oa.realm.ShiroCASRealm"> <property 
+		name="cachingEnabled" value="true" /> <property name="authenticationCachingEnabled" 
+		value="true" /> <property name="authenticationCacheName" value="authenticationCache" 
+		/> <property name="authorizationCachingEnabled" value="true" /> <property 
+		name="authorizationCacheName" value="authorizationCache" /> <property name="casServerUrlPrefix" 
+		value="http://localhost:8001/cas" /> <property name="casService" value="http://localhost:8080/" 
+		/> </bean> -->
+
+	<bean id="casRealm" class="com.skycloud.oa.realm.ShiroCASRealm">
+		<property name="defaultRoles" value="ROLE_USER" />
+		<property name="casServerUrlPrefix" value="${cas.casServerUrlPrefix.url}" />
+		<!-- 客户端的回调地址设置，必须和下面的shiro-cas过滤器拦截的地址一致 -->
+		<property name="casService" value="${cas.casService.url}" />
+	</bean>
+
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+		<property name="sessionMode" value="native" />
+		<property name="cacheManager" ref="cacheManager" />
+		<property name="sessionManager" ref="sessionManager" />
+
+		<property name="realm" ref="casRealm" />
+	</bean>
+
+	<!-- 項目自定义的Realm -->
+	<bean id="sessionDAO"
+		class="org.apache.shiro.session.mgt.eis.MemorySessionDAO"></bean>
+	<!-- <bean id="sessionDAO" class="com.skycloud.oa.shiro.session.CustomShiroSessionDAO">
+		<property name="shiroSessionRepository" ref="jedisShiroSessionRepository" />
+	</bean>
+	
+	<bean id="jedisShiroSessionRepository" class="com.skycloud.oa.shiro.session.JedisShiroSessionRepository" /> -->
+
+	<bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor" />
+
+	<bean id="casFilter" class="org.apache.shiro.cas.CasFilter">
+		<property name="failureUrl" value="/resource/pages/error/unauthorize.jsp" />
+	</bean>
+
+	<bean id="formAuthenticationFilter" class="com.skycloud.oa.filter.FormAuthFilter" />
+
+	<!-- Shiro Filter authc -->
+	<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+		<property name="securityManager" ref="securityManager" />
+		<!-- <property name="loginUrl" value="/login" /> -->
+		<property name="loginUrl"
+			value="${cas.loginUrl.url}" />
+		<property name="successUrl" value="${cas.successUrl.url}" />
+		<property name="unauthorizedUrl" value="/resource/pages/error/unauthorize.jsp" />
+		<property name="filters">
+			<map>
+				<entry key="authc" value-ref="formAuthenticationFilter" />
+				<entry key="cas" value-ref="casFilter" />
+			</map>
+		</property>
+		<property name="filterChainDefinitions">
+			<value>
+				/cas = cas
+				/login = anon
+				/ = authc
+				/validateCode = anon
+				/resource/pages/auth/user/password.jsp = authc
+				/resource/** = anon
+				/** = authc
+			</value>
+		</property>
+	</bean>
+</beans>
